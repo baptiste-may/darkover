@@ -22,6 +22,26 @@ def lecture_csv(fichier: str) -> list:
     return table
 
 
+def clear():
+    """
+    Envoie plusieurs retour à la ligne pour nétoyer la console
+    """
+    global CLEAR_LINES_NB
+    print("\n" * CLEAR_LINES_NB)
+
+
+def somme(lst: list) -> int:
+    """
+    Additionne tous les membres d'une liste
+    :param lst: La liste
+    :return: La somme
+    """
+    s = 0
+    for e in lst:
+        s += e
+    return s
+
+
 # OBJECTS
 
 class Pair:
@@ -55,7 +75,7 @@ class Pair:
         return None
 
 
-class Mots:
+class ListeMots:
     """
     Une liste de pairs de mots
     """
@@ -76,9 +96,32 @@ class Mots:
 class Joueur:
 
     def __init__(self, nom):
+        self.uuid = random.getrandbits(8)
         self.nom = nom
         self.role = None
         self.mot = None
+
+
+class Mots:
+
+    def __init__(self):
+        self.donnee = {}
+
+    def mot_existant(self, mot):
+        s = False
+        for p in self.donnee.values():
+            for m in p:
+                if m == mot:
+                    s = True
+        return s
+
+    def personnel(self, uuid):
+        return self.donnee[uuid]
+
+    def ajouter_mot(self, uuid, mot):
+        if uuid not in self.donnee.keys():
+            self.donnee[uuid] = []
+        self.donnee[uuid].append(mot)
 
 
 class Game:
@@ -92,6 +135,7 @@ class Game:
         self.pair = None
         self.vrai_mot = None
         self.compo = {}
+        self.mots = Mots()
 
     def ajouter_joueur(self, nom_joueur: str):
         """
@@ -121,7 +165,7 @@ class Game:
         self.vrai_mot = self.pair.mot1 if bool_aleatoire() else self.pair.mot2
 
         for i in range(len(self.joueurs)):
-            print("\n" * 100)
+            clear()
             joueur = self.joueurs[i]
             joueur.role = temp_compo[i]
             input("{}, appuis sur [Entrer] pour voir ton mot".format(joueur.nom))
@@ -134,20 +178,60 @@ class Game:
             print("Ton mot est :", mot)
             input("[Suivant]")
 
-        print("\n" * 100)
-        print("La partie peut commencer !")
-        input()
+        clear()
+
+        manche = 0
+
+        while somme(list(self.compo.values())) > 0:
+
+            manche += 1
+
+            random.shuffle(self.joueurs)
+
+            for joueur in self.joueurs:
+                clear()
+                while True:
+                    print("{}, entre ton {} mot".format(joueur.nom, str(manche) + ("er" if manche == 1 else "e")))
+                    mot = input()
+                    if mot == "":
+                        print("Ce n'est pas un mot")
+                    elif self.mots.mot_existant(mot):
+                        print("Ce mot a déjà était dit")
+                    else:
+                        self.mots.ajouter_mot(joueur.uuid, mot)
+                        break
+
+            clear()
+
+            message = "\n- Manche {} -\n\nVoici les mots dits :\n".format(manche)
+
+            for joueur in self.joueurs:
+                message += "* " + joueur.nom + ": "
+                for mot in self.mots.personnel(joueur.uuid):
+                    message += mot + ", "
+                message = message[:-2]
+                message += "\n"
+
+            print(message)
+            input("\n" + "[Passer au vote]")
 
 
-DATA = Mots("data.csv")
+# VARIABLES
+
+DATA = ListeMots("data.csv")
+
+CLEAR_LINES_NB = 100
+
+# RUNNING
 
 while True:
-    print("\n" * 100)
+    clear()
     print("""
+    -- DARKOVER --
+    
     [A] Jouer
-    [B] Options
-    [C] A propos
-    [D] Quitter
+    [B] A propos
+    [C] Quitter
     """)
     action = input().lower()
     match action:
@@ -200,8 +284,6 @@ while True:
 
             game.demarer(DATA, nb_espions, white)
         case "b":
-            input("WIP")
-        case "c":
             print("""
             - Darkover -
             
@@ -211,6 +293,6 @@ while True:
             * LANNOOTE Pierre
             """)
             input("[Fermer]")
-        case "d":
-            print("\n" * 100)
+        case "c":
+            clear()
             break
