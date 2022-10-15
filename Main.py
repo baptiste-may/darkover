@@ -107,7 +107,10 @@ class Mots:
     def __init__(self):
         self.donnee = {}
 
-    def mot_existant(self, mot):
+    def mot_existant(self, mot: str) -> bool:
+        """
+        Vérifie si un mot a déjà était dit
+        """
         s = False
         for p in self.donnee.values():
             for m in p:
@@ -115,13 +118,31 @@ class Mots:
                     s = True
         return s
 
-    def personnel(self, uuid):
+    def personnel(self, uuid: int) -> Joueur:
+        """
+        Renvoie le joueur correspondant à l'id
+        :param uuid: L'id du joueur
+        :return: Le joueur
+        """
         return self.donnee[uuid]
 
-    def ajouter_mot(self, uuid, mot):
+    def ajouter_mot(self, uuid: int, mot: str):
+        """
+        Ajoute un mot dans les mots proposés
+        :param uuid: L'id du joueur
+        :param mot: Le mot proposé
+        """
         if uuid not in self.donnee.keys():
             self.donnee[uuid] = []
         self.donnee[uuid].append(mot)
+
+    def mots_joueur(self, uuid: int) -> list:
+        """
+        Renvoie les mots proposés par un joueur
+        :param uuid: L'id du joueur
+        :return: La liste de tous les mots proposés
+        """
+        return self.donnee[uuid]
 
 
 class Game:
@@ -145,9 +166,12 @@ class Game:
         self.joueurs.append(Joueur(nom_joueur))
         self.nb_joueurs += 1
 
-    def demarer(self, data, nb_espions, white):
+    def demarer(self, data: ListeMots, nb_espions: int, white: bool):
         """
         Démmare la partie
+        :param data: La liste des mots
+        :param nb_espions: Le nombre d'espions dans la partie
+        :param white: Si un mister white est présent dans la partie
         """
 
         self.pair = data.pair_aleatoire()
@@ -158,7 +182,7 @@ class Game:
 
         temp_compo = []
         for role, nb in self.compo.items():
-            for i in range(int(nb)):
+            for _ in range(int(nb)):
                 temp_compo.append(role)
         random.shuffle(temp_compo)
 
@@ -207,7 +231,7 @@ class Game:
 
             for joueur in self.joueurs:
                 message += "* " + joueur.nom + ": "
-                for mot in self.mots.personnel(joueur.uuid):
+                for mot in self.mots.mots_joueur(joueur.uuid):
                     message += mot + ", "
                 message = message[:-2]
                 message += "\n"
@@ -228,7 +252,7 @@ while True:
     clear()
     print("""
     -- DARKOVER --
-    
+
     [A] Jouer
     [B] A propos
     [C] Quitter
@@ -286,7 +310,7 @@ while True:
         case "b":
             print("""
             - Darkover -
-            
+
             Réalisé par :
             * MAY Baptiste
             * MERLIER Aleksandre
