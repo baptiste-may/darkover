@@ -10,14 +10,15 @@ def bool_aleatoire() -> bool:
     return random.randint(0, 1) == 0
 
 
-def lecture_csv(fichier: str) -> list:
+def lecture_csv(separe:str, fichier: str) -> list:
     """
     importe le fichier csv, charge son contenu dans un tableau
+    :param separe: Le sépérateur
     :param fichier: nom du fichier csv à traiter
     :return: tableau, liste de listes contenant toutes les informations du fichier
     """
     fichier = open(fichier, "r")
-    table = [ligne.rstrip().split(";") for ligne in fichier]
+    table = [ligne.rstrip().split(separe) for ligne in fichier]
     fichier.close()
     return table
 
@@ -80,8 +81,8 @@ class ListeMots:
     Une liste de pairs de mots
     """
 
-    def __init__(self, file_name: str):
-        data = lecture_csv(file_name)
+    def __init__(self, separe:str, file_name: str):
+        data = lecture_csv(separe, file_name)
         self.data = []
         for mots in data:
             self.data.append(Pair(mots[0], mots[1]))
@@ -90,7 +91,8 @@ class ListeMots:
         """
         Renvoie une pair de deux mots aléatoirement
         """
-        return self.data[random.randint(0, len(self.data))]
+        index = random.randint(0, len(self.data)-1)
+        return self.data[index]
 
 
 class Joueur:
@@ -166,19 +168,20 @@ class Game:
         self.joueurs.append(Joueur(nom_joueur))
         self.nb_joueurs += 1
 
-    def demarer(self, data: ListeMots, nb_espions: int, white: bool):
+    def demarrer(self, data: ListeMots, nb_espions: int, white: bool):
         """
-        Démmare la partie
+        Démarre la partie
         :param data: La liste des mots
         :param nb_espions: Le nombre d'espions dans la partie
         :param white: Si un mister white est présent dans la partie
         """
 
+        # SETUP
         self.pair = data.pair_aleatoire()
 
-        self.compo["white"] = 1 if white else 0
-        self.compo["espions"] = nb_espions
-        self.compo["civils"] = self.nb_joueurs - self.compo["espions"] - self.compo["white"]
+        self.compo["Mister White"] = 1 if white else 0
+        self.compo["Espion"] = nb_espions
+        self.compo["Civil"] = self.nb_joueurs - self.compo["Espion"] - self.compo["Mister White"]
 
         temp_compo = []
         for role, nb in self.compo.items():
@@ -188,14 +191,15 @@ class Game:
 
         self.vrai_mot = self.pair.mot1 if bool_aleatoire() else self.pair.mot2
 
+        # DISTRIBUTION DES MOTS (ET ROLE)
         for i in range(len(self.joueurs)):
             clear()
             joueur = self.joueurs[i]
             joueur.role = temp_compo[i]
             input("{}, appuis sur [Entrer] pour voir ton mot".format(joueur.nom))
-            if joueur.role == "white":
+            if joueur.role == "Mister White":
                 mot = "Tu es Mister White"
-            elif joueur.role == "civils":
+            elif joueur.role == "Civil":
                 mot = self.vrai_mot
             else:
                 mot = self.pair.inverse(self.vrai_mot)
@@ -206,12 +210,15 @@ class Game:
 
         manche = 0
 
-        while somme(list(self.compo.values())) > 0:
+        # LOOP GAME
+        end = 0
+        while end == 0:
 
             manche += 1
 
             random.shuffle(self.joueurs)
 
+            # DEMANDE MOT
             for joueur in self.joueurs:
                 clear()
                 while True:
@@ -227,6 +234,7 @@ class Game:
 
             clear()
 
+            # AFFICHAGE DES MOTS
             message = "\n- Manche {} -\n\nVoici les mots dits :\n".format(manche)
 
             for joueur in self.joueurs:
@@ -238,11 +246,64 @@ class Game:
 
             print(message)
             input("\n" + "[Passer au vote]")
+            
+            # VOTES
+            clear()
+            while True:
+                message = "Choisis quelqu'un à éliminé parmis :\n"
+                for i in range(len(self.joueurs)):
+                    message += "{} - {}\n".format(i+1, self.joueurs[i].nom)
+                message += "\n"
+                
+                print(message)
+                vote = input()
+                try:
+                    vote = int(vote)
+                    assert len(self.joueurs) >= vote and vote >= 1
+                    vote -= 1
+                    break
+                except ValueError:
+                    print()
+                except AssertionError:
+                    print("Ce joueur n'existe pas")
+            
+            # ELIMINATION
+            clear()
+            tue = self.joueurs[vote]
+            print("{} a été éliminé ! Il était : {}".format(tue.nom, tue.role))
+            if tue.role == "Mister White":
+                while True:
+                    print("{}, propose un mot".format(tue.nom))
+                    mot_white = input()
+                    if mot_white.lower() == self.vrai_mot.lower():
+                        end = 3
+                    break
+                white = False
+            elif tue.role == "Espion":
+                nb_espions -= 1
+            self.joueurs.pop(vote)
+            input("[Suivant]")
+            
+            # CONDITION D'ARRET
+            if nb_espions == 0:
+                if not white:
+                    end = 1
+            if nb_espions + (1 if white else 0) >= round(len(self.joueurs) * (1 / 2)):
+                end = 2
+                
+        # PHRASE DE FIN
+        if end == 1:
+            print("Les civils ont gagné !")
+        elif end == 2:
+            print("Les espions ont gagné !")
+        else:
+            print("Mister White a gagné !")
+        input()
 
 
 # VARIABLES
 
-DATA = ListeMots("data.csv")
+DATA = ListeMots(";", "data.csv")
 
 CLEAR_LINES_NB = 100
 
@@ -262,18 +323,23 @@ while True:
         case "a":
             game = Game()
 
+            # NOMBRE DE JOUEURS
             while True:
                 print("Entrez le nombre de joueurs")
                 nb_joueurs = input()
                 try:
                     nb_joueurs = int(nb_joueurs)
-                    assert nb_joueurs >= 4, "NoAmontPlayer"
+                    assert 4 <= nb_joueurs <= 9, "NoAmontPlayer"
                     break
                 except ValueError:
                     print()
                 except AssertionError:
-                    print("Il faut au moins 4 joueurs pour commencer une partie")
+                    if nb_joueurs < 4:
+                        print("Il faut au moins 4 joueurs pour commencer une partie")
+                    elif nb_joueurs > 9:
+                        print("Il peut y avoir au maximum 9 joueurs")
 
+            # AJOUT D'UN MISTE WHITE
             while True:
                 print("Veux-tu un Mister White ? (O/N)")
                 white = input().lower()
@@ -284,29 +350,36 @@ while True:
                     white = False
                     break
 
-            max_espions = round(nb_joueurs * (1 / 5))
+            # CALCUL NOMBRE D'ESPIONS
+            max_espions = round(nb_joueurs * (1 / 3))
             nb_espions = 0
-            if max_espions == 1:
+            if max_espions == (2 if white else 1):
                 nb_espions = 1
             else:
-                while True:
-                    print("Entrez le nombre d'espions (entre {} et {})".format(1, max_espions))
-                    nb_espions = input()
-                    try:
-                        nb_espions = int(nb_espions)
-                        assert 1 <= nb_espions <= max_espions
-                        break
-                    except ValueError:
-                        print()
-                    except AssertionError:
-                        print("")
+                min_espions = 0 if nb_espions == 1 else 1
+                if min_espions == max_espions:
+                    nb_espions = min_espions
+                else:
+                    while True:
+                        print("Entrez le nombre d'espions (entre {} et {})".format(min_espions, max_espions))
+                        nb_espions = input()
+                        try:
+                            nb_espions = int(nb_espions)
+                            assert min_espions <= nb_espions <= max_espions
+                            break
+                        except ValueError:
+                            print()
+                        except AssertionError:
+                            print("")
 
+            # ENTREE DES NOMS DES JOUEURS
             for i in range(nb_joueurs):
                 print("Joueur {}, veuillez entrer votre pseudo".format(i + 1))
                 pseudo = input()
                 game.ajouter_joueur(pseudo)
 
-            game.demarer(DATA, nb_espions, white)
+            # DEMARRE LA PARTIE
+            game.demarrer(DATA, nb_espions, white)
         case "b":
             print("""
             - Darkover -
