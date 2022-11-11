@@ -217,6 +217,8 @@ class Game:
             manche += 1
 
             random.shuffle(self.joueurs)
+            while self.joueurs[0].role == "Mister White":
+                random.shuffle(self.joueurs)
 
             # DEMANDE MOT
             for joueur in self.joueurs:
@@ -298,6 +300,9 @@ class Game:
             print("Les espions ont gagné !")
         else:
             print("Mister White a gagné !")
+        print()
+        print("Le mot des civils était " + self.pair.inverse(self.vrai_mot))
+        print("Le mot des espions était " + self.vrai_mot)
         input()
 
 
@@ -329,7 +334,7 @@ while True:
                 nb_joueurs = input()
                 try:
                     nb_joueurs = int(nb_joueurs)
-                    assert 4 <= nb_joueurs <= 9, "NoAmontPlayer"
+                    assert 3 <= nb_joueurs <= 9, "NoAmontPlayer"
                     break
                 except ValueError:
                     print()
@@ -339,16 +344,19 @@ while True:
                     elif nb_joueurs > 9:
                         print("Il peut y avoir au maximum 9 joueurs")
 
-            # AJOUT D'UN MISTE WHITE
-            while True:
-                print("Veux-tu un Mister White ? (O/N)")
-                white = input().lower()
-                if "o" in white:
-                    white = True
-                    break
-                elif "n" in white:
-                    white = False
-                    break
+            # AJOUT D'UN MISTER WHITE
+            if nb_joueurs != 3:
+                while True:
+                    print("Veux-tu un Mister White ? (O/N)")
+                    white = input().lower()
+                    if "o" in white:
+                        white = True
+                        break
+                    elif "n" in white:
+                        white = False
+                        break
+            else:
+                white = False
 
             # CALCUL NOMBRE D'ESPIONS
             max_espions = round(nb_joueurs * (1 / 3))
