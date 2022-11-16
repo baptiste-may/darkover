@@ -37,6 +37,19 @@ Créer un jeu dans lequel il y a un ou plusieurs espions. Le but est pour les ci
 ### Jour 5 : Projet fini
 > Aucun nouveau bug de signaler. Nous avons donc fini le projet.
 
+## Explications des objets
+
+- `Pair`:
+  - Un couple de deux mots (l'un va aux civils et l'autre aux espions)
+- `ListeMot`:
+  - Une liste de `Pair` de mots, liste implémentée avec un `CSV`
+- `Joueur`:
+  - Un joueur contenant ses données (son id, son nom, son role et son nom)
+- `Mots`:
+  - Tous les mots proposés par les joueurs
+- `Game`:
+  - Une partie contenant toute ses informations (ses joueurs, son nombre de joueurs, la `Pair` de mots, le mot des civils, la composition et les `Mots` proposés)
+
 ## Crédits
 
 Réalisé par :
