@@ -96,6 +96,9 @@ class ListeMots:
 
 
 class Joueur:
+    """
+    Un joueur
+    """
 
     def __init__(self, nom):
         self.uuid = random.getrandbits(8)
@@ -105,6 +108,9 @@ class Joueur:
 
 
 class Mots:
+    """
+    Une liste de mots proposés par les joueurs
+    """
 
     def __init__(self):
         self.donnee = {}
