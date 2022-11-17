@@ -10,7 +10,7 @@ def bool_aleatoire() -> bool:
     return random.randint(0, 1) == 0
 
 
-def lecture_csv(separe:str, fichier: str) -> list:
+def lecture_csv(separe: str, fichier: str) -> list:
     """
     importe le fichier csv, charge son contenu dans un tableau
     :param separe: Le sépérateur
@@ -81,7 +81,7 @@ class ListeMots:
     Une liste de pairs de mots
     """
 
-    def __init__(self, separe:str, file_name: str):
+    def __init__(self, separe: str, file_name: str):
         data = lecture_csv(separe, file_name)
         self.data = []
         for mots in data:
@@ -91,7 +91,7 @@ class ListeMots:
         """
         Renvoie une pair de deux mots aléatoirement
         """
-        index = random.randint(0, len(self.data)-1)
+        index = random.randint(0, len(self.data) - 1)
         return self.data[index]
 
 
@@ -254,27 +254,27 @@ class Game:
 
             print(message)
             input("\n" + "[Passer au vote]")
-            
+
             # VOTES
             clear()
             while True:
                 message = "Choisis quelqu'un à éliminé parmis :\n"
                 for i in range(len(self.joueurs)):
-                    message += "{} - {}\n".format(i+1, self.joueurs[i].nom)
+                    message += "{} - {}\n".format(i + 1, self.joueurs[i].nom)
                 message += "\n"
-                
+
                 print(message)
                 vote = input()
                 try:
                     vote = int(vote)
-                    assert len(self.joueurs) >= vote and vote >= 1
+                    assert len(self.joueurs) >= vote >= 1
                     vote -= 1
                     break
                 except ValueError:
                     print()
                 except AssertionError:
                     print("Ce joueur n'existe pas")
-            
+
             # ELIMINATION
             clear()
             tue = self.joueurs[vote]
@@ -291,14 +291,14 @@ class Game:
                 nb_espions -= 1
             self.joueurs.pop(vote)
             input("[Suivant]")
-            
+
             # CONDITION D'ARRET
             if nb_espions == 0:
                 if not white:
                     end = 1
             if nb_espions + (1 if white else 0) >= round(len(self.joueurs) * (1 / 2)):
                 end = 2
-                
+
         # PHRASE DE FIN
         if end == 1:
             print("Les civils ont gagné !")
@@ -314,7 +314,7 @@ class Game:
 
 # VARIABLES
 
-DATA = ListeMots(";", "data.csv")
+DATA = ListeMots(",", "data.csv")
 
 CLEAR_LINES_NB = 100
 
